@@ -1,7 +1,8 @@
 .vs/
 node_modules/
 dist/development/
-.claude
+.tmp/
+.claude/
 CLAUDE.md
 sessions/
 CLAUDE.sessions.md
