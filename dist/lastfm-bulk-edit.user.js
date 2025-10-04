@@ -728,6 +728,28 @@ async function augmentEditScrobbleForm(scrobbleData) {
         });
     });
     const distinctScrobbleData = [...distinctGroups].map(([_name, values]) => values[0]);
+    // Track suffix removal feature: Detects and offers to remove common suffixes
+    // like " - Remastered", " (Live)", etc. from multiple tracks at once.
+    // This helps clean up inconsistent track naming across different releases.
+    const trackNames = distinctScrobbleData.map(data => data.get('track_name'));
+    // Detect multiple suffix patterns across tracks
+    const suffixPatterns = detectSuffixPatterns(trackNames);
+    // Store patterns for use in submit handler
+    let detectedPatterns = [];
+    // Create UI for all detected patterns
+    if (suffixPatterns.length > 0) {
+        detectedPatterns = suffixPatterns;
+        const suffixRemovalElement = createMultiSuffixRemovalUI(suffixPatterns);
+        const artistFormGroup = artist_name_input.closest('.form-group');
+        artistFormGroup.parentElement.insertBefore(suffixRemovalElement, artistFormGroup);
+    }
+    // Fallback to single suffix detection if no patterns found
+    const commonSuffix = trackNames.length > 1 ? longestCommonSuffix(trackNames) : '';
+    if (suffixPatterns.length === 0 && trackNames.length > 1 && isValidSuffixForRemoval(commonSuffix)) {
+        const suffixRemovalElement = createSuffixRemovalUI(commonSuffix);
+        const artistFormGroup = artist_name_input.closest('.form-group');
+        artistFormGroup.parentElement.insertBefore(suffixRemovalElement, artistFormGroup);
+    }
     // disable the submit button when the form has validation errors
     const submitButton = form.querySelector('button[type="submit"]');
     form.addEventListener('input', () => {
@@ -735,7 +757,7 @@ async function augmentEditScrobbleForm(scrobbleData) {
     });
     // set up the form submit event listener
     submitButton.addEventListener('click', async (event) => {
-        var _a, _b;
+        var _a, _b, _c;
         event.preventDefault();
         const formData = new FormData(form);
         const formDataToSubmit = [];
@@ -743,28 +765,78 @@ async function augmentEditScrobbleForm(scrobbleData) {
         const artist_name = getMixedInputValue(artist_name_input);
         const album_name = getMixedInputValue(album_name_input);
         const album_artist_name = getMixedInputValue(album_artist_name_input);
+        // check which suffix patterns should be removed
+        const removeCommonSuffix = (_a = form.querySelector('#remove_common_suffix')) === null || _a === void 0 ? void 0 : _a.checked;
+        const selectedPatterns = [];
+        // Check which pattern checkboxes are selected
+        if (detectedPatterns.length > 0) {
+            detectedPatterns.forEach((pattern, index) => {
+                const checkbox = form.querySelector(`#remove_suffix_pattern_${index}`);
+                if (checkbox === null || checkbox === void 0 ? void 0 : checkbox.checked) {
+                    selectedPatterns.push(pattern);
+                }
+            });
+        }
         for (const originalData of distinctScrobbleData) {
             const track_name_original = originalData.get('track_name');
             const artist_name_original = originalData.get('artist_name');
-            const album_name_original = (_a = originalData.get('album_name')) !== null && _a !== void 0 ? _a : '';
-            const album_artist_name_original = (_b = originalData.get('album_artist_name')) !== null && _b !== void 0 ? _b : '';
+            const album_name_original = ((_b = originalData.get('album_name')) !== null && _b !== void 0 ? _b : '');
+            const album_artist_name_original = ((_c = originalData.get('album_artist_name')) !== null && _c !== void 0 ? _c : '');
             // if the album artist field is Mixed, use the old and new artist names to keep the album artist in sync
             const album_artist_name_sync = album_artist_name_input.placeholder === 'Mixed' && distinctScrobbleData.some((s) => s.get('artist_name') === album_artist_name_original)
                 ? artist_name
                 : album_artist_name;
+            // Check if this track is affected by any selected pattern
+            let trackAffectedByPattern = false;
+            let appliedPattern = null;
+            for (const pattern of selectedPatterns) {
+                // Check if current track is in this pattern's affected tracks
+                const affectedTrack = pattern.tracks.find(t => t.originalName === track_name_original);
+                if (affectedTrack) {
+                    trackAffectedByPattern = true;
+                    appliedPattern = pattern.pattern;
+                    break;
+                }
+            }
             // check if anything changed compared to the original track, artist, album and album artist combination
             if (track_name !== null && track_name !== track_name_original ||
                 artist_name !== null && artist_name !== artist_name_original ||
                 album_name !== null && album_name !== album_name_original ||
-                album_artist_name_sync !== null && album_artist_name_sync !== album_artist_name_original) {
+                album_artist_name_sync !== null && album_artist_name_sync !== album_artist_name_original ||
+                removeCommonSuffix && commonSuffix ||
+                trackAffectedByPattern) {
                 const clonedFormData = cloneFormData(formData);
                 // Last.fm expects a timestamp
                 clonedFormData.set('timestamp', originalData.get('timestamp'));
                 // populate the *_original fields to instruct Last.fm which scrobbles need to be edited
                 clonedFormData.set('track_name_original', track_name_original);
-                if (track_name === null) {
-                    clonedFormData.set('track_name', track_name_original);
+                // determine the final track name (priority: manual edit > pattern removal > single suffix removal > original)
+                let finalTrackName = track_name_original;
+                // apply pattern-based suffix removal if this track is affected
+                if (trackAffectedByPattern && appliedPattern && track_name === null) {
+                    // Remove the pattern and everything after it from the LAST occurrence
+                    const patternIndex = track_name_original.lastIndexOf(appliedPattern);
+                    if (patternIndex !== -1) {
+                        finalTrackName = track_name_original.substring(0, patternIndex).trim();
+                    }
                 }
+                // fallback to single suffix removal if enabled and no pattern applied
+                else if (removeCommonSuffix && commonSuffix && track_name === null && !trackAffectedByPattern) {
+                    // Remove suffix from the end only
+                    if (track_name_original.endsWith(commonSuffix)) {
+                        finalTrackName = track_name_original.substring(0, track_name_original.length - commonSuffix.length).trim();
+                    }
+                }
+                // manual edit takes priority over suffix removal
+                if (track_name !== null) {
+                    finalTrackName = track_name;
+                }
+                // Validate we're not creating an empty track name
+                if (finalTrackName.trim() === '') {
+                    finalTrackName = track_name_original;
+                    console.warn(`Suffix removal would create empty track name for "${track_name_original}", keeping original`);
+                }
+                clonedFormData.set('track_name', finalTrackName);
                 clonedFormData.set('artist_name_original', artist_name_original);
                 if (artist_name === null) {
                     clonedFormData.set('artist_name', artist_name_original);
@@ -956,6 +1028,165 @@ function cloneFormData(formData) {
         clonedFormData.append(name, value);
     }
     return clonedFormData;
+}
+/**
+ * Finds the longest common prefix among an array of strings.
+ * @param strings - Array of strings to analyze
+ * @returns The longest common prefix, or empty string if none
+ */
+function longestCommonPrefix(strings) {
+    if (strings.length === 0)
+        return '';
+    const sorted = strings.slice().sort();
+    const first = sorted[0];
+    const last = sorted[sorted.length - 1];
+    let i = 0;
+    while (i < first.length && first[i] === last[i]) {
+        i++;
+    }
+    return first.substring(0, i);
+}
+/**
+ * Finds the longest common suffix among an array of strings.
+ * @param strings - Array of strings to analyze
+ * @returns The longest common suffix, or empty string if none
+ */
+function longestCommonSuffix(strings) {
+    if (strings.length === 0)
+        return '';
+    const reversed = strings.map(str => str.split('').reverse().join(''));
+    return longestCommonPrefix(reversed).split('').reverse().join('');
+}
+/**
+ * Validates if a suffix is meaningful enough to offer removal.
+ * Requires the suffix to be at least 4 characters and contain a separator.
+ * @param suffix - The suffix to validate
+ * @returns True if the suffix should be offered for removal
+ */
+function isValidSuffixForRemoval(suffix) {
+    if (!suffix || suffix.length < 4)
+        return false;
+    // Check for common suffix patterns: " - ", " (", " [", etc.
+    const separatorPatterns = [' - ', ' (', ' [', ' / ', ' | '];
+    return separatorPatterns.some(pattern => suffix.includes(pattern));
+}
+/**
+ * Detects multiple suffix patterns across tracks.
+ * Groups tracks by common suffix beginnings and returns patterns that appear 2+ times.
+ * @param trackNames - Array of track names to analyze
+ * @returns Array of detected suffix patterns with affected tracks
+ */
+function detectSuffixPatterns(trackNames) {
+    // Step 1: Extract base names and suffixes for each track
+    const trackData = trackNames.map((name, index) => {
+        // Find the first occurrence of common separators
+        const separators = [' - ', ' (', ' [', ' / ', ' | '];
+        let earliestPos = name.length;
+        let suffix = '';
+        for (const sep of separators) {
+            const pos = name.indexOf(sep);
+            if (pos !== -1 && pos < earliestPos) {
+                earliestPos = pos;
+                suffix = name.substring(pos);
+            }
+        }
+        return {
+            index,
+            originalName: name,
+            baseName: earliestPos < name.length ? name.substring(0, earliestPos) : name,
+            suffix: suffix
+        };
+    });
+    // Step 2: Group tracks by suffix beginnings
+    const patterns = [];
+    const processedIndices = new Set();
+    for (let i = 0; i < trackData.length; i++) {
+        if (processedIndices.has(i) || !trackData[i].suffix)
+            continue;
+        const currentSuffix = trackData[i].suffix;
+        const group = [trackData[i]];
+        // Find other tracks with suffixes that start similarly
+        for (let j = i + 1; j < trackData.length; j++) {
+            if (processedIndices.has(j) || !trackData[j].suffix)
+                continue;
+            // Find common prefix between the two suffixes
+            const commonPrefix = longestCommonPrefix([currentSuffix, trackData[j].suffix]);
+            // Require at least 4 characters and a separator to be meaningful
+            if (commonPrefix.length >= 4 &&
+                [' - ', ' (', ' [', ' / ', ' | '].some(sep => commonPrefix.includes(sep))) {
+                group.push(trackData[j]);
+            }
+        }
+        // If we found 2+ tracks with similar suffix beginnings
+        if (group.length >= 2) {
+            // Get the common prefix of all suffixes in this group
+            const groupSuffixes = group.map(t => t.suffix);
+            const commonPattern = longestCommonPrefix(groupSuffixes);
+            // Only add if the pattern is meaningful
+            if (isValidSuffixForRemoval(commonPattern)) {
+                patterns.push({
+                    pattern: commonPattern,
+                    tracks: group.map(t => ({
+                        index: t.index,
+                        originalName: t.originalName,
+                        suffix: t.suffix
+                    }))
+                });
+                // Mark these tracks as processed
+                group.forEach(t => processedIndices.add(t.index));
+            }
+        }
+    }
+    return patterns;
+}
+/**
+ * Creates the checkbox UI element for suffix removal.
+ * @param suffix - The suffix that will be removed
+ * @returns The DOM element to insert into the form
+ */
+function createSuffixRemovalUI(suffix) {
+    const template = document.createElement('template');
+    template.innerHTML = `
+        <div class="form-group js-form-group">
+            <label for="remove_common_suffix" class="control-label">Common suffix</label>
+            <div class="js-form-group-controls form-group-controls">
+                <div class="checkbox">
+                    <label for="remove_common_suffix">
+                        <input id="remove_common_suffix" type="checkbox">
+                        Remove <strong>${he_1.default.escape(suffix)}</strong> from track titles
+                    </label>
+                </div>
+            </div>
+        </div>`;
+    return template.content.firstElementChild.cloneNode(true);
+}
+/**
+ * Creates the multi-pattern checkbox UI for suffix removal.
+ * @param patterns - Array of detected suffix patterns
+ * @returns The DOM element containing all checkboxes
+ */
+function createMultiSuffixRemovalUI(patterns) {
+    const container = document.createElement('div');
+    patterns.forEach((pattern, index) => {
+        const template = document.createElement('template');
+        const checkboxId = `remove_suffix_pattern_${index}`;
+        const affectedCount = pattern.tracks.length;
+        template.innerHTML = `
+            <div class="form-group js-form-group">
+                ${index === 0 ? '<label class="control-label">Common suffixes detected</label>' : ''}
+                <div class="js-form-group-controls form-group-controls">
+                    <div class="checkbox">
+                        <label for="${checkboxId}">
+                            <input id="${checkboxId}" type="checkbox" data-pattern-index="${index}">
+                            Remove <strong>${he_1.default.escape(pattern.pattern)}</strong> and everything after
+                            <span style="color: #999;">(affects ${affectedCount} track${affectedCount !== 1 ? 's' : ''})</span>
+                        </label>
+                    </div>
+                </div>
+            </div>`;
+        container.appendChild(template.content.firstElementChild.cloneNode(true));
+    });
+    return container;
 }
 
 
