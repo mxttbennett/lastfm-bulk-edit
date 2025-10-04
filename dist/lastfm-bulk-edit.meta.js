@@ -2,7 +2,7 @@
 // @name Last.fm Bulk Edit
 // @description Bulk edit your scrobbles for any artist or album on Last.fm at once.
 // @version 1.6.2
-// @author Rudey
+// @author Rudey (maxbennett fork)
 // @homepage https://github.com/mxttbennett/lastfm-bulk-edit
 // @supportURL https://github.com/mxttbennett/lastfm-bulk-edit/issues
 // @match https://www.last.fm/*
