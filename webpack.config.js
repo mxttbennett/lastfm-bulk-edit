@@ -31,14 +31,14 @@ var config = {
       headers: {
         name: 'Last.fm Bulk Edit',
         match: 'https://www.last.fm/*',
-        icon: 'https://raw.githubusercontent.com/RudeySH/lastfm-bulk-edit/main/img/icon.png',
+        icon: 'https://raw.githubusercontent.com/mxttbennett/lastfm-bulk-edit/main/img/icon.png',
         license: 'AGPL-3.0-or-later',
-        namespace: 'https://github.com/RudeySH/lastfm-bulk-edit',
+        namespace: 'https://github.com/mxttbennett/lastfm-bulk-edit',
         require: [
           'https://cdnjs.cloudflare.com/ajax/libs/he/1.2.0/he.min.js',
         ],
       },
-      downloadBaseURL: 'https://raw.githubusercontent.com/RudeySH/lastfm-bulk-edit/main/dist/',
+      downloadBaseURL: 'https://raw.githubusercontent.com/mxttbennett/lastfm-bulk-edit/main/dist/',
     }),
   ],
 };

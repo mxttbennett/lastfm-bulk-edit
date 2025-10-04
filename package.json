@@ -10,14 +10,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RudeySH/lastfm-bulk-edit.git"
+    "url": "git+https://github.com/mxttbennett/lastfm-bulk-edit.git"
   },
-  "author": "Rudey",
+  "author": "Rudey (mxttbennett fork)",
   "license": "AGPL-3.0-or-later",
   "bugs": {
-    "url": "https://github.com/RudeySH/lastfm-bulk-edit/issues"
+    "url": "https://github.com/mxttbennett/lastfm-bulk-edit/issues"
   },
-  "homepage": "https://github.com/RudeySH/lastfm-bulk-edit",
+  "homepage": "https://github.com/mxttbennett/lastfm-bulk-edit",
   "private": true,
   "devDependencies": {
     "@tsconfig/recommended": "^1.0.6",

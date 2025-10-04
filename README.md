@@ -19,7 +19,7 @@ Bulk edit your scrobbles for any artist, album or track on [Last.fm](https://www
    - [Violentmonkey](https://violentmonkey.github.io/). Open source. Doesn't support Chrome / Manifest V3.
    - Greasemonkey is currently not supported, see FAQ.
    - See next paragraph for Android devices (iOS not supported).
-3. Install this userscript: [Last.fm Bulk Edit](https://raw.githubusercontent.com/RudeySH/lastfm-bulk-edit/main/dist/lastfm-bulk-edit.user.js).
+3. Install this userscript: [Last.fm Bulk Edit](https://raw.githubusercontent.com/mxttbennett/lastfm-bulk-edit/main/dist/lastfm-bulk-edit.user.js).
    - If you're using Tampermonkey, press the "Install" button on the top-left.
    - If you're using Violentmonkey, press the "Confirm installation" button on the left.
 4. Go to your [Last.fm library](https://www.last.fm/user/_/library/artists).
@@ -97,7 +97,7 @@ There could be many reasons for this. Sometimes Last.fm servers are too busy, tr
 
 ### How do I get in contact with you?
 
-If you have found a bug, or want to propose a feature or improvement, feel free to open a [GitHub issue](https://github.com/RudeySH/lastfm-bulk-edit/issues). For general support or discussion, use [GitHub discussions](https://github.com/RudeySH/lastfm-bulk-edit/discussions) or contact me on Discord, you'll find me in the [Last.fm Discord](https://discord.gg/6aTeg3u) (I'm @rudeysh).
+If you have found a bug, or want to propose a feature or improvement, feel free to open a [GitHub issue](https://github.com/mxttbennett/lastfm-bulk-edit/issues). For general support or discussion, use [GitHub discussions](https://github.com/mxttbennett/lastfm-bulk-edit/discussions) or contact me on Discord, you'll find me in the [Last.fm Discord](https://discord.gg/6aTeg3u) (I'm @mxttbennett).
 
 
 ### Why do I need a Last.fm Pro subscription?
@@ -170,7 +170,7 @@ Redditors of [r/lastfm](https://www.reddit.com/r/lastfm) have expressed similar 
 
 ### Who are you?
 
-I'm Rudey. Check out [my Last.fm profile](https://www.last.fm/user/RudeySH).
+I'm Rudey. Check out [my Last.fm profile](https://www.last.fm/user/mxttbennett).
 
 
 ### How do I support Last.fm Bulk Edit?
