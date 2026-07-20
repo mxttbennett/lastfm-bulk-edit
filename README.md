@@ -2,6 +2,8 @@
 
 Bulk edit your scrobbles for any artist, album or track on [Last.fm](https://www.last.fm/) at once.
 
+> This is [mxttbennett](https://github.com/mxttbennett)'s fork of [RudeySH/lastfm-bulk-edit](https://github.com/RudeySH/lastfm-bulk-edit), adding bulk track-suffix removal (e.g. stripping " - Remastered" from many tracks at once). The install link below points at this fork's build; report fork-specific problems on [this fork's issues](https://github.com/mxttbennett/lastfm-bulk-edit/issues).
+
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=QPVH74PGFEFTL&source=url)
 
 
@@ -97,7 +99,7 @@ There could be many reasons for this. Sometimes Last.fm servers are too busy, tr
 
 ### How do I get in contact with you?
 
-If you have found a bug, or want to propose a feature or improvement, feel free to open a [GitHub issue](https://github.com/mxttbennett/lastfm-bulk-edit/issues). For general support or discussion, use [GitHub discussions](https://github.com/mxttbennett/lastfm-bulk-edit/discussions) or contact me on Discord, you'll find me in the [Last.fm Discord](https://discord.gg/6aTeg3u) (I'm @mxttbennett).
+If you have found a bug, or want to propose a feature or improvement, feel free to open a [GitHub issue](https://github.com/RudeySH/lastfm-bulk-edit/issues). For general support or discussion, use [GitHub discussions](https://github.com/RudeySH/lastfm-bulk-edit/discussions) or contact me on Discord, you'll find me in the [Last.fm Discord](https://discord.gg/6aTeg3u) (I'm @rudeysh).
 
 
 ### Why do I need a Last.fm Pro subscription?
@@ -170,7 +172,7 @@ Redditors of [r/lastfm](https://www.reddit.com/r/lastfm) have expressed similar 
 
 ### Who are you?
 
-I'm Rudey. Check out [my Last.fm profile](https://www.last.fm/user/mxttbennett).
+I'm Rudey. Check out [my Last.fm profile](https://www.last.fm/user/RudeySH).
 
 
 ### How do I support Last.fm Bulk Edit?
