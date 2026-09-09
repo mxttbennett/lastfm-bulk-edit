@@ -2,7 +2,8 @@
 node_modules/
 dist/development/
 .tmp/
-.claude/
+.claude/*
+!.claude/settings.json
 CLAUDE.md
 sessions/
 CLAUDE.sessions.md
